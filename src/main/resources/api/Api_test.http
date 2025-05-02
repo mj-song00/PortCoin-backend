@@ -1,0 +1,17 @@
+@base_url = http://localhost:8080
+@jwt_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1MTg1NjYyZi0xOGMxLTQ2NjEtYTBiMy1mYzA3YjE3OGZjOTMiLCJyb2xlIjoiVVNFUiIsImV4cCI6MTc0NDAzMzYyMywiaWF0IjoxNzQ0MDMzNjIxfQ.qv88l9mwd3Ef3sHfcaNVGtAqfQJZ-H41V-ok4bqbDsQ
+
+
+POST {{base_url}}/api/v1/users/sign-up
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "nickName": "tester",
+  "password": "Asdf1234!"
+}
+
+###
+GET {{base_url}}/api/v1/users/me/profile
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}

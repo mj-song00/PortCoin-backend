@@ -1,0 +1,40 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties]"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/coin?currentSchema=public
+    username: ${POSTGRES_NAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show-sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      repositories:
+        enabled: false
+
+  springdoc:
+    api-docs:
+      enabled: true
+    swagger-ui:
+      enabled: true
+      path: /swagger-ui.html
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_TIME}
+  expiration: ${JWT_EXPIRATION_TIME}
+
+coin:
+  api:
+    key: ${COINGECKO_API_KEY}
