@@ -3,7 +3,7 @@ package com.port.portcoin.domain.coin.controller;
 import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
-import com.port.portcoin.domain.external.CoinGecko;
+import com.port.portcoin.domain.external.coingecko.CoinGecko;
 import com.port.portcoin.domain.coin.dto.request.CreateCoinRequest;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.coin.service.CoinService;
@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Tag(name = "Coin", description = "코인 관련 API, ADMIN만 등록이 가능합니다.")
@@ -58,7 +59,7 @@ public class CoinController {
         if (coinList == null) {
             // Redis에 데이터가 없으면 CoinGecko API 호출 후 Redis에 저장
             coinList = coinGecko.getCoinList();
-            redisTemplate.opsForValue().set("all_coins", coinList);
+            redisTemplate.opsForValue().set("all_coins", coinList, 1, TimeUnit.MINUTES);
         }
 
         // 상위 10개 코인만 추출

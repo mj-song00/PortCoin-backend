@@ -1,4 +1,4 @@
-package com.port.portcoin.domain.external;
+package com.port.portcoin.domain.external.coingecko;
 
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import org.springframework.core.ParameterizedTypeReference;
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class CoinGecko {
@@ -48,6 +49,6 @@ public class CoinGecko {
                 .body(new ParameterizedTypeReference<>() {});
 
         // Redis에 새로운 데이터 저장
-        redisTemplate.opsForValue().set("CoinGeckoMarket:top10", refreshedData);
+        redisTemplate.opsForValue().set("CoinGeckoMarket:top10", refreshedData, 1, TimeUnit.MINUTES);
     }
 }
