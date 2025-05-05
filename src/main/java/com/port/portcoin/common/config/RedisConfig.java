@@ -1,6 +1,7 @@
 package com.port.portcoin.common.config;
 
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
+import com.port.portcoin.domain.external.naver.dto.response.NewsResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,10 +44,20 @@ public class RedisConfig {
 
     @Bean
     public RedisTemplate<String, List<CoinMarketResponse>> coinMarketRedisTemplate() {
-        RedisTemplate<String, List<CoinMarketResponse>> redisTemplate = new RedisTemplate<>();
+        return createTemplate();
+    }
+
+    @Bean
+    public RedisTemplate<String, List<NewsResponse>> newsRedisTemplate() {
+        return createTemplate();
+    }
+
+    private <T> RedisTemplate<String, T> createTemplate() {
+        RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
     }
+
 }
