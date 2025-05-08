@@ -2,9 +2,7 @@ package com.port.portcoin.domain.external.naver;
 
 import com.port.portcoin.domain.external.naver.dto.response.NaverNewsList;
 import com.port.portcoin.domain.external.naver.dto.response.NewsResponse;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,13 +24,6 @@ public class NaverNews {
     private final RestClient naverRestClient;
     private final RedisTemplate<String, List<NewsResponse>> redisTemplate;
 
-    @Value("${naver.api.param}")
-    private String param;
-
-    @PostConstruct
-    public void checkParam() {
-        System.out.println("Loaded param from env: " + param);
-    }
 
     public NaverNews(RestClient naverRestClient, RedisTemplate<String, List<NewsResponse>> redisTemplate) {
         this.naverRestClient = naverRestClient;
@@ -61,7 +52,7 @@ public class NaverNews {
             // 응답이 null이 아니고, 뉴스 아이템이 존재하면 처리
             if (response != null && response.getItems() != null) {
                 for (NewsResponse news : response.getItems()) {
-                    // "칼럼"이 포함된 뉴스는 제외
+                    // "칼럼, 이코노믹스"가 포함된 뉴스는 제외
                     if (news.getTitle().contains("칼럼") ||news.getTitle().contains("이코노믹스")) {
                         continue;
                     }
@@ -89,7 +80,7 @@ public class NaverNews {
 
         List<NewsResponse> refreshedNewsData = naverRestClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("query", param)
+                        .queryParam("query","코인,경기,해외,주식" )
                         .queryParam("display", 10)
                         .queryParam("start", 1)
                         .queryParam("sort", "date")

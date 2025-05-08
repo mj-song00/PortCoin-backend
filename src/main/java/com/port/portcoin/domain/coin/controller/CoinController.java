@@ -47,7 +47,10 @@ public class CoinController {
 
 
     /**
-     * CoinGecko에서 제공하는 API를 사용하는 controller
+     * CoinGecko에서 제공하는 API를 사용하는 controller 입니다.
+     *
+     *  CoinGecko 코인 조회 API
+     *  API 재사용 대기시간은 1분 입니다.
      */
 
     @Operation(summary = "시장 코인 조회", description = "코인들의 시장값을 조회합니다")
@@ -69,5 +72,4 @@ public class CoinController {
         ApiResponse<List<CoinMarketResponse>> response = ApiResponse.successWithData(topCoins,ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-
 }
