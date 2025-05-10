@@ -1,5 +1,6 @@
 package com.port.portcoin.common.config;
 
+import com.port.portcoin.domain.chart.dto.response.CoinChartResponse;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.external.naver.dto.response.NewsResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +50,11 @@ public class RedisConfig {
 
     @Bean
     public RedisTemplate<String, List<NewsResponse>> newsRedisTemplate() {
+        return createTemplate();
+    }
+
+    @Bean
+    public RedisTemplate<String, List<CoinChartResponse.ChartPoint>> coinHistoryRedisTemplate(){
         return createTemplate();
     }
 
