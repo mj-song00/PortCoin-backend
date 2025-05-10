@@ -36,9 +36,12 @@ out/
 ### VS Code ###
 .vscode/
 
-### application ###
-/src/main/resource/application-dev.yml
-/src/main/resource/application.yml
 ### env ###
 .env
 .env.dev
+
+### dummy data###
+  src/main/java/com/port/portcoin/tools/GenerateDummyCoinData.java
+  src/main/java/com/port/portcoin/tools/GenerateDummyPortfolioCoinData.java
+  src/main/java/com/port/portcoin/tools/GenerateDummyPortfolioNameData .java
+  src/main/java/com/port/portcoin/tools/GenerateDummyUser.java
