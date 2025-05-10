@@ -62,7 +62,6 @@ public class CoinController {
         if (coinList == null) {
             // Redis에 데이터가 없으면 CoinGecko API 호출 후 Redis에 저장
             coinList = coinGecko.getCoinList();
-            redisTemplate.opsForValue().set("all_coins", coinList, 1, TimeUnit.MINUTES);
         }
 
         // 상위 10개 코인만 추출

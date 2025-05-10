@@ -46,7 +46,7 @@ public class CoinGecko {
                     });
 
             // 데이터를 캐시에 저장
-            redisTemplate.opsForValue().set("CoinGeckoMarket:top10", cachedData);
+            redisTemplate.opsForValue().set("CoinGeckoMarket:top10", cachedData, 1, TimeUnit.MINUTES);
         }
 
         return cachedData;
