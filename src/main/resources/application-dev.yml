@@ -38,3 +38,8 @@ jwt:
 coin:
   api:
     key: ${COINGECKO_API_KEY}
+
+naver:
+  api:
+    clientId: ${CLIENTID}
+    client-secret: ${CLIENTSECRET}
