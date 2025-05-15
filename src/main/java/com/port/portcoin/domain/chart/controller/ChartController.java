@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.port.portcoin.domain.user.dto.AuthUser;
 
-import java.util.List;
 
 @Tag(name = "Chart", description = "개별 coin들의 chart 관련 API입니다.")
 @RestController
