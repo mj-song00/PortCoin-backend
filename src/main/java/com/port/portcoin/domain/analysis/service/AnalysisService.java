@@ -3,6 +3,7 @@ package com.port.portcoin.domain.analysis.service;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.analysis.dto.response.UserSummeryResponse;
+import com.port.portcoin.domain.analysis.repository.AnalysisCustomRepository;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.entity.User;
 import com.port.portcoin.domain.user.enums.UserRole;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -18,31 +20,27 @@ import java.util.UUID;
 @Slf4j
 public class AnalysisService {
 
-    private final AnalysisRepository analysisRepository;
+    private final AnalysisCustomRepository analysisRepository;
     private final UserRepository userRepository;
 
     public Long getTotalUser(AuthUser authUser) {
-        User user = getUser(authUser.getId());
-        validateUserExists(user.getId());
-
+        validateAdminUser(authUser.getId());
         return userRepository.count();
     }
 
-    public UserSummeryResponse getSummeryResult(AuthUser authUser) {
-        User user = getUser(authUser.getId());
-        validateUserExists(user.getId());
+    public List<UserSummeryResponse> getSummeryResult(AuthUser authUser) {
+        validateAdminUser(authUser.getId());
 
-        UserSummeryResponse result =
+        return analysisRepository.findByNMonth();
+
     }
 
-    private User getUser(UUID id) {
-        return userRepository.findById(id)
+    private void validateAdminUser(UUID userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ExceptionEnum.USER_NOT_FOUND));
-    }
 
-    private void validateUserExists(UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new BaseException(ExceptionEnum.USER_NOT_FOUND);
+        if (!user.getUserRole().equals(UserRole.ADMIN)) {
+            throw new BaseException(ExceptionEnum.NOT_ADMIN_ROLE);
         }
     }
 
