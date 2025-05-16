@@ -33,7 +33,10 @@ public enum ExceptionEnum {
     PORTFOLIO_COIN_NOT_FOUND(HttpStatus.NOT_FOUND, "COIN_NOT_FOUND", "포트폴리오에 등록된 코인을 찾을 수 없습니다." ),
 
     //외부 API 관련
-    CHECK_API_KEY(HttpStatus.NOT_FOUND, "CHECK_API_KEY","API KEY를 확인해주세요.");
+    CHECK_API_KEY(HttpStatus.NOT_FOUND, "CHECK_API_KEY","API KEY를 확인해주세요."),
+
+    //기타
+    TYPE_ERROR(HttpStatus.BAD_REQUEST,"TYPE_ERROR","타입을 확인해주세요" );
 
     private final HttpStatus status;
     private final String errorCode;

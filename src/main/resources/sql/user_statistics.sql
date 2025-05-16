@@ -39,8 +39,8 @@ ORDER BY week_start;
 WITH RECURSIVE week_ranges AS (
     -- 기준일 설정
     SELECT
-        DATE '2025-01-01' AS week_start,
-        (DATE '2025-01-01' + INTERVAL '6 days')::date AS week_end
+        DATE '2025-01-05' AS week_start,
+        (DATE '2025-01-05' + INTERVAL '6 days')::date AS week_end
     UNION ALL
     -- 다음 주 추가 (타입 통일 위해 캐스팅)
     SELECT
@@ -53,7 +53,7 @@ WITH RECURSIVE week_ranges AS (
                    SELECT
                        created_at::date AS signup_date
                    FROM users
-                   WHERE created_at::date >= DATE '2025-01-01'
+                   WHERE created_at::date >= DATE '2025-01-05'
                )
 SELECT
     w.week_start,
