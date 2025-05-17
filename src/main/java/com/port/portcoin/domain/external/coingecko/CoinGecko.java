@@ -2,11 +2,14 @@ package com.port.portcoin.domain.external.coingecko;
 
 import com.port.portcoin.domain.chart.dto.response.CoinChartResponse;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
+import com.port.portcoin.domain.coin.repository.CoinRepository;
+import com.port.portcoin.domain.portfoliocoin.repository.PortfolioCoinRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
@@ -24,13 +27,17 @@ public class CoinGecko {
     private final RestClient restClient;
     private final RedisTemplate<String, List<CoinMarketResponse>> redisTemplate;
     private final RedisTemplate<String, List<CoinChartResponse.ChartPoint>> chartRedisTemplate;
+    private final CoinRepository coinRepository;
+    private final PortfolioCoinRepository portfolioCoinRepository;
 
     public CoinGecko(RestClient restClient, RedisTemplate<String, List<CoinMarketResponse>> redisTemplate,
-                     RedisTemplate<String, List<CoinChartResponse.ChartPoint>> chartRedisTemplate) {
+                     RedisTemplate<String, List<CoinChartResponse.ChartPoint>> chartRedisTemplate,
+                     CoinRepository coinRepository, PortfolioCoinRepository portfolioCoinRepository) {
         this.restClient = restClient;
         this.redisTemplate = redisTemplate;
         this.chartRedisTemplate = chartRedisTemplate;
-
+        this.coinRepository = coinRepository;
+        this.portfolioCoinRepository = portfolioCoinRepository;
     }
 
     public List<CoinMarketResponse> getCoinList() {
@@ -64,6 +71,38 @@ public class CoinGecko {
 
         // Redis에 새로운 데이터 저장
         redisTemplate.opsForValue().set("CoinGeckoMarket:top10", refreshedData, 1, TimeUnit.MINUTES);
+
+
+        // 코인 심볼 → 현재가격 맵으로 변환해서 저장
+        Map<String, String> priceMap = refreshedData.stream()
+                .collect(Collectors.toMap(
+                        c -> c.getSymbol().toUpperCase(), // 예: BTC, ETH
+                        c -> String.valueOf(c.getCurrentPrice())
+                ));
+        redisTemplate.opsForHash().putAll("CoinMarket:prices", priceMap);
+    }
+
+    @Scheduled(fixedRate = 60000) // 1분마다
+    @Transactional
+    public void syncRedisPriceToRdb() {
+        // Redis에서 가격 정보 가져오기
+        Map<Object, Object> priceMap = redisTemplate.opsForHash().entries("CoinMarket:prices");
+
+        // coin_id, symbol 가져오기
+        List<Object[]> coinIdAndSymbols = coinRepository.findAllCoinIdAndSymbol(); // (coinId, symbol)
+
+        for (Object[] entry : coinIdAndSymbols) {
+            Long coinId = (Long) entry[0];
+            String symbol = ((String) entry[1]).toUpperCase();
+
+            Object priceObj = priceMap.get(symbol);
+            if (priceObj == null) continue;
+
+            double price = Double.parseDouble(priceObj.toString());
+
+            // portfolio_coin 테이블에 현재 가격 업데이트
+            portfolioCoinRepository.updateCurrentPriceByCoinId(coinId, price);
+        }
     }
 
     public CoinChartResponse getCoinChart(String symbol, int days) {

@@ -67,7 +67,7 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
             for (CoinAdd add : coinEditRequest.getToAdd()) {
                 Coin coin = coinRepository.findById(add.getCoinId())
                         .orElseThrow(() -> new BaseException(ExceptionEnum.COIN_NOT_FOUND));
-                PortfolioCoin portfolioCoin = new PortfolioCoin(portfolio, coin, add.getAmount(), add.getPurchasePrice());
+                PortfolioCoin portfolioCoin = new PortfolioCoin(portfolio, coin, add.getAmount(), add.getPurchasePrice(), add.getCurrentPrice(), add.getPurchaseDate());
                 portfolioCoinRepository.save(portfolioCoin);
             }
         }
