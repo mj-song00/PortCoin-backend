@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @NoArgsConstructor
 @Table(name = "portfolio_coin")
@@ -21,6 +23,10 @@ public class PortfolioCoin extends Timestamped {
 
     private Double purchasePrice;
 
+    private Double currentPrice;
+
+    private LocalDateTime purchaseDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
@@ -29,11 +35,13 @@ public class PortfolioCoin extends Timestamped {
     @JoinColumn(name = "coin_id")
     private Coin coin;
 
-    public  PortfolioCoin(Portfolio portfolio, Coin coin, Double amount, Double purchasePrice) {
+    public  PortfolioCoin(Portfolio portfolio, Coin coin, Double amount, Double purchasePrice, Double currentPrice, LocalDateTime purchaseDate) {
         this.portfolio = portfolio;
         this.coin = coin;
         this.amount = amount;
         this.purchasePrice = purchasePrice;
+        this.currentPrice = currentPrice;
+        this.purchaseDate = purchaseDate;
     }
 
     public void update(Double amount, Double purchasePrice) {

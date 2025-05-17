@@ -50,6 +50,7 @@ CREATE TABLE portfolio_coin
     coin_id BIGINT NOT NULL,
     amount DOUBLE PRECISION,
     purchase_price DOUBLE PRECISION,
+    current_price DOUBLE PRECISION,
     purchase_date DATE,
     created_at   TIMESTAMP(6),
     updated_at   TIMESTAMP(6),
