@@ -4,6 +4,7 @@ import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
 import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
+import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
 import com.port.portcoin.domain.analysis.service.CoinAnalysisService;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,5 +39,18 @@ public class CoinAnalysisController {
         ApiResponse<List<CoinDataResponse>> response = ApiResponse.successWithData(result, ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.ok(response);
 
+    }
+
+    /***************************/
+    // 코인별 유저 분포 조회 api
+    /***************************/
+    @Operation(summary = "코인별 유저 분포 조회", description = "코인별 유저 분포를 조회합니다.")
+    @GetMapping("/holding-distribution")
+    public ResponseEntity<ApiResponse<List<HoldingDistributionResponse>>> getUserDistribution(
+            @Auth AuthUser authUser
+    ){
+        List<HoldingDistributionResponse> result = coinAnalysisService.getUserDistribution(authUser);
+        ApiResponse<List<HoldingDistributionResponse>> response = ApiResponse.successWithData(result, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.ok(response);
     }
 }

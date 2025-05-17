@@ -3,6 +3,7 @@ package com.port.portcoin.domain.analysis.service;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
+import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
 import com.port.portcoin.domain.analysis.repository.CoinAnalysisCustomRepository;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.entity.User;
@@ -28,6 +29,12 @@ public class CoinAnalysisService {
         validateAdminUser(authUser.getId());
 
         return coinAnalysisRepository.findByCoinId();
+    }
+
+    public List<HoldingDistributionResponse> getUserDistribution(AuthUser authUser) {
+        validateAdminUser(authUser.getId());
+
+        return coinAnalysisRepository.findByUserDistribution();
     }
 
     private void validateAdminUser(UUID userId) {
