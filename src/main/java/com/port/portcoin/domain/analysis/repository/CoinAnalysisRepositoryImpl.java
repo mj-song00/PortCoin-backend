@@ -4,6 +4,7 @@ import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
 import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -74,5 +75,37 @@ public class CoinAnalysisRepositoryImpl implements CoinAnalysisCustomRepository 
                 ))
                 .sorted(Comparator.comparing(HoldingDistributionResponse::getRange)) // 정렬 필요시
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Double calculateRateOfReturn() {
+        List<Tuple> userProfitRates = q
+                .select(
+                        user.id,
+                        Expressions.cases()
+                                .when(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum().eq(0.0))
+                                .then(0.0)
+                                .otherwise(
+                                        portfolioCoin.currentPrice.multiply(portfolioCoin.amount).sum()
+                                                .subtract(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum())
+                                                .divide(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum())
+                                )
+                                .as("profitRate")
+                )
+                .from(user)
+                .join(portfolio).on(user.id.eq(portfolio.user.id))
+                .join(portfolioCoin).on(portfolio.portfolioId.eq(portfolioCoin.portfolio.portfolioId))
+                .groupBy(user.id)
+                .fetch();
+
+        double averageProfitRate = userProfitRates.stream()
+                .mapToDouble(tuple -> {
+                    Double profitRate = tuple.get(1, Double.class);
+                    return profitRate != null ? profitRate : 0.0;
+                })
+                .average()
+                .orElse(0.0);
+
+        return Math.round(averageProfitRate * 10000.0) / 100.0;  // 소수점 2자리 반올림
     }
 }

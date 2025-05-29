@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,5 +53,17 @@ public class CoinAnalysisController {
         List<HoldingDistributionResponse> result = coinAnalysisService.getUserDistribution(authUser);
         ApiResponse<List<HoldingDistributionResponse>> response = ApiResponse.successWithData(result, ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.ok(response);
+    }
+
+    /***************************/
+    // 전체 유저 수익률 api
+    /***************************/
+    @Operation(summary = "전체 유저 수익률 조회", description = "전체 유저들의 수익률을 조회합니다.")
+    @GetMapping("/return")
+    public ResponseEntity<Double>getRateOfReturn(
+            @Auth AuthUser authUser
+    ){
+        Double result = coinAnalysisService.getReturn(authUser);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

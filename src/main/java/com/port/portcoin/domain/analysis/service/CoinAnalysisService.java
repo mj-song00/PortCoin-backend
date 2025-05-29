@@ -37,6 +37,13 @@ public class CoinAnalysisService {
         return coinAnalysisRepository.findByUserDistribution();
     }
 
+    public Double getReturn(AuthUser authUser) {
+        validateAdminUser(authUser.getId());
+
+        return coinAnalysisRepository.calculateRateOfReturn();
+    }
+
+
     private void validateAdminUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ExceptionEnum.USER_NOT_FOUND));

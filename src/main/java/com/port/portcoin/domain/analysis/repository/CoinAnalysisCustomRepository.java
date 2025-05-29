@@ -9,4 +9,6 @@ public interface CoinAnalysisCustomRepository {
     List<CoinDataResponse> findByCoinId();
 
     List<HoldingDistributionResponse> findByUserDistribution();
+
+    Double calculateRateOfReturn();
 }
