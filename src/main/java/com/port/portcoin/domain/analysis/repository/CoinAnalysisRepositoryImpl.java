@@ -122,7 +122,6 @@ public class CoinAnalysisRepositoryImpl implements CoinAnalysisCustomRepository 
     public Page<UserProfitResponseItem> calculateTop5(Pageable pageable ) {
         NumberExpression<Double> profitRate = getProfitRateExpression();
 
-
         List<Tuple> results = baseUserPortfolioQuery()
                 .orderBy(profitRate.desc())
                 .offset(pageable.getOffset())
