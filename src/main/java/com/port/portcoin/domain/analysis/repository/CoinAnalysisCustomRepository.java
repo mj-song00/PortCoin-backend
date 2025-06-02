@@ -16,4 +16,6 @@ public interface CoinAnalysisCustomRepository {
     Double calculateRateOfReturn();
 
     Page<UserProfitResponseItem> calculateTop5(Pageable pageable);
+
+    Page<UserProfitResponseItem> calculateBottom(Pageable pageable);
 }

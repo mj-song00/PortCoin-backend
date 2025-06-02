@@ -141,6 +141,37 @@ public class CoinAnalysisRepositoryImpl implements CoinAnalysisCustomRepository 
         return new PageImpl<>(content, pageable, total);
     }
 
+    @Override
+    public Page<UserProfitResponseItem> calculateBottom(Pageable pageable) {
+        NumberExpression<Double> profitRate = getProfitRateExpression();
+
+        List<Tuple> allResults = q
+                .select(user.id, profitRate, portfolio.portfolioId)
+                .from(user)
+                .join(portfolio).on(user.id.eq(portfolio.user.id))
+                .join(portfolioCoin).on(portfolio.portfolioId.eq(portfolioCoin.portfolio.portfolioId))
+                .groupBy(user.id, portfolio.portfolioId)
+                .orderBy(profitRate.asc()) // 하위부터 정렬
+                .fetch();
+
+        int total = allResults.size();
+        int limit = (int) Math.ceil(total * 0.10); // 하위 10%
+
+        List<UserProfitResponseItem> bottom10 = allResults.stream()
+                .limit(limit)
+                .map(tuple -> new UserProfitResponseItem(
+                        tuple.get(user.id),
+                        Optional.ofNullable(tuple.get(profitRate)).orElse(0.0), // fallback
+                        tuple.get(portfolio.portfolioId)
+                ))
+                .toList();
+
+        long result = baseUserPortfolioQuery().fetch().size();
+
+        return new PageImpl<>(bottom10, pageable, result);
+
+    }
+
     // profitRate 계산식을 메서드로 분리
     private NumberExpression<Double> getProfitRateExpression() {
         return new CaseBuilder()

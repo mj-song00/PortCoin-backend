@@ -52,6 +52,11 @@ public class CoinAnalysisService {
         return coinAnalysisRepository.calculateTop5(pageable);
     }
 
+    public Page<UserProfitResponseItem> getBottomRank(Pageable pageable, AuthUser authUser) {
+        validateAdminUser(authUser.getId());
+        return coinAnalysisRepository.calculateBottom(pageable);
+    }
+
     private void validateAdminUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ExceptionEnum.USER_NOT_FOUND));

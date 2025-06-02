@@ -96,7 +96,7 @@ public class CoinAnalysisController {
             @RequestParam(defaultValue = "10") int size
     ){
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<UserProfitResponseItem> topBottomList = coinAnalysisService.getTopRank(pageable, authUser);
+        Page<UserProfitResponseItem> topBottomList = coinAnalysisService.getBottomRank(pageable, authUser);
         return buildPagedResponse(topBottomList );
     }
 
