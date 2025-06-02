@@ -82,19 +82,32 @@ public class CoinAnalysisController {
     ){
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<UserProfitResponseItem> top5List = coinAnalysisService.getTopRank(pageable, authUser);
-        UserProfitResponse response = new UserProfitResponse(
-                top5List.getContent(),
-                top5List.getNumber(),
-                top5List.getTotalPages(),
-                top5List.getTotalElements()
-        );
-       ApiResponse<UserProfitResponse> apiResponse = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
-
-        return ResponseEntity.ok(apiResponse);
+        return buildPagedResponse(top5List);
     }
 
     /***************************/
     // 하위 유저 수익률 api
     /***************************/
+    @Operation(summary = "하위 10% 유저 수익률 조회", description = "하위 10% 유저의 수익률을 조회합니다.")
+    @GetMapping("/bottom-ranking")
+    public ResponseEntity<ApiResponse<UserProfitResponse>> getBottomRank(
+            @Auth AuthUser authUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<UserProfitResponseItem> topBottomList = coinAnalysisService.getTopRank(pageable, authUser);
+        return buildPagedResponse(topBottomList );
+    }
 
+    private ResponseEntity<ApiResponse<UserProfitResponse>> buildPagedResponse(Page<UserProfitResponseItem> pageData) {
+        UserProfitResponse response = new UserProfitResponse(
+                pageData.getContent(),
+                pageData.getNumber(),
+                pageData.getTotalPages(),
+                pageData.getTotalElements()
+        );
+        ApiResponse<UserProfitResponse> apiResponse = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.ok(apiResponse);
+    }
 }
