@@ -24,23 +24,6 @@ FROM (
      ) AS user_coin_counts
 GROUP BY 구간;
 
---전체유저 평균 수익률
--- SELECT ROUND (AVG(user_profit.profit_rate) * 100, 2) AS average_profit_rate
--- FROM (
---          SELECT u.id AS user_id,
---                 CASE
---                     WHEN SUM(pc.purchase_price * pc.amount) = 0 THEN 0
---                     ELSE ROUND(
---                             ((SUM(pc.current_price * pc.amount) - SUM(pc.purchase_price * pc.amount))
---                                 / SUM(pc.purchase_price * pc.amount))::numeric,2
---                          )
---                     END AS profit_rate
---          FROM users u
---                   JOIN portfolio p ON u.id = p.user_id
---                   JOIN portfolio_coin pc ON p.portfolio_id = pc.portfolio_id
---          GROUP BY u.id
---      ) AS user_profit;
--- 공통 CTE
 WITH user_profit AS (
     SELECT u.id AS user_id,
            CASE

@@ -2,16 +2,25 @@ package com.port.portcoin.domain.analysis.repository;
 
 import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
 import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
+import com.port.portcoin.domain.analysis.dto.response.UserProfitResponse;
+import com.port.portcoin.domain.analysis.dto.response.UserProfitResponseItem;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -107,5 +116,52 @@ public class CoinAnalysisRepositoryImpl implements CoinAnalysisCustomRepository 
                 .orElse(0.0);
 
         return Math.round(averageProfitRate * 10000.0) / 100.0;  // 소수점 2자리 반올림
+    }
+
+    @Override
+    public Page<UserProfitResponseItem> calculateTop5(Pageable pageable ) {
+        NumberExpression<Double> profitRate = getProfitRateExpression();
+
+
+        List<Tuple> results = baseUserPortfolioQuery()
+                .orderBy(profitRate.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<UserProfitResponseItem> content = results.stream()
+                .map(tuple -> new UserProfitResponseItem(
+                        tuple.get(user.id),
+                        Optional.ofNullable(tuple.get(profitRate)).orElse(0.0), // fallback
+                        tuple.get(portfolio.portfolioId)
+                ))
+                .toList();
+
+        long total = baseUserPortfolioQuery().fetch().size();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    // profitRate 계산식을 메서드로 분리
+    private NumberExpression<Double> getProfitRateExpression() {
+        return new CaseBuilder()
+                .when(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum().eq(0.0))
+                .then(0.0)
+                .otherwise(
+                        portfolioCoin.currentPrice.multiply(portfolioCoin.amount).sum()
+                                .subtract(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum())
+                                .divide(portfolioCoin.purchasePrice.multiply(portfolioCoin.amount).sum())
+                );
+    }
+
+
+    // 공통 쿼리 베이스 메서드 (필요하면 필터 조건 추가 가능)
+    private JPAQuery<Tuple> baseUserPortfolioQuery() {
+        NumberExpression<Double> profitRate = getProfitRateExpression();
+        return q.select(user.id, profitRate, portfolio.portfolioId)
+                .from(user)
+                .join(portfolio).on(user.id.eq(portfolio.user.id))
+                .join(portfolioCoin).on(portfolio.portfolioId.eq(portfolioCoin.portfolio.portfolioId))
+                .groupBy(user.id, portfolio.portfolioId);
     }
 }

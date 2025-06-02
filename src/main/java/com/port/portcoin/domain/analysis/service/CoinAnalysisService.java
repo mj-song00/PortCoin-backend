@@ -4,6 +4,7 @@ import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
 import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
+import com.port.portcoin.domain.analysis.dto.response.UserProfitResponseItem;
 import com.port.portcoin.domain.analysis.repository.CoinAnalysisCustomRepository;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.entity.User;
@@ -11,6 +12,8 @@ import com.port.portcoin.domain.user.enums.UserRole;
 import com.port.portcoin.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,6 +46,11 @@ public class CoinAnalysisService {
         return coinAnalysisRepository.calculateRateOfReturn();
     }
 
+    public Page<UserProfitResponseItem> getTopRank(Pageable pageable,  AuthUser authUser) {
+        validateAdminUser(authUser.getId());
+
+        return coinAnalysisRepository.calculateTop5(pageable);
+    }
 
     private void validateAdminUser(UUID userId) {
         User user = userRepository.findById(userId)
@@ -52,4 +60,5 @@ public class CoinAnalysisService {
             throw new BaseException(ExceptionEnum.NOT_ADMIN_ROLE);
         }
     }
+
 }

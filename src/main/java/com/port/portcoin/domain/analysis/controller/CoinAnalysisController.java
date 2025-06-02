@@ -5,17 +5,20 @@ import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
 import com.port.portcoin.domain.analysis.dto.response.CoinDataResponse;
 import com.port.portcoin.domain.analysis.dto.response.HoldingDistributionResponse;
+import com.port.portcoin.domain.analysis.dto.response.UserProfitResponse;
+import com.port.portcoin.domain.analysis.dto.response.UserProfitResponseItem;
 import com.port.portcoin.domain.analysis.service.CoinAnalysisService;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -66,4 +69,32 @@ public class CoinAnalysisController {
         Double result = coinAnalysisService.getReturn(authUser);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+
+    /***************************/
+    // 상위 유저 수익률 api
+    /***************************/
+    @Operation(summary = "상위 5% 유저 수익률 조회", description = "상위 5% 유저의 수익률을 조회합니다.")
+    @GetMapping("/top-ranking")
+    public ResponseEntity<ApiResponse<UserProfitResponse>> getTopRank(
+            @Auth AuthUser authUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<UserProfitResponseItem> top5List = coinAnalysisService.getTopRank(pageable, authUser);
+        UserProfitResponse response = new UserProfitResponse(
+                top5List.getContent(),
+                top5List.getNumber(),
+                top5List.getTotalPages(),
+                top5List.getTotalElements()
+        );
+       ApiResponse<UserProfitResponse> apiResponse = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    /***************************/
+    // 하위 유저 수익률 api
+    /***************************/
+
 }
