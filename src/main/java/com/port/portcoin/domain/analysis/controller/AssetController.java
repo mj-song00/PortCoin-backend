@@ -3,10 +3,7 @@ package com.port.portcoin.domain.analysis.controller;
 import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
-import com.port.portcoin.domain.analysis.dto.response.AssetTablePageResponse;
-import com.port.portcoin.domain.analysis.dto.response.AssetTableResponseItem;
-import com.port.portcoin.domain.analysis.dto.response.PieChartResponse;
-import com.port.portcoin.domain.analysis.dto.response.TotalAssetResponse;
+import com.port.portcoin.domain.analysis.dto.response.*;
 import com.port.portcoin.domain.analysis.service.AssetService;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,4 +77,31 @@ public class AssetController {
         ApiResponse<TotalAssetResponse> result = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.ok(result);
     }
+
+    /***************************/
+    // 자산 평균 하위 10%
+    /***************************/
+    @Operation(summary = "유저 자산 평균 하위 10% 자산 조회", description = "유저 자산 평균 하위 10% 유저들의 자산을 조회합니다.")
+    @GetMapping("/bottom")
+    public ResponseEntity<ApiResponse<List<UserAssetSummary>>> getBottom(
+            @Auth AuthUser authUser
+    ){
+        List<UserAssetSummary> response = assetService.getBottom(authUser);
+        ApiResponse<List<UserAssetSummary>> result = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.ok(result);
+    }
+
+    /***************************/
+    // 자산 평균 상위 10%
+    /***************************/
+    @Operation(summary = "유저 자산 평균 상위 10% 자산 조회", description = "유저 자산 평균 상위 10% 유저들의 자산을 조회합니다.")
+    @GetMapping("/top")
+    public ResponseEntity<ApiResponse<List<UserAssetSummary>>> getTop(
+            @Auth AuthUser authUser
+    ){
+        List<UserAssetSummary> response = assetService.getTop(authUser);
+        ApiResponse<List<UserAssetSummary>> result = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.ok(result);
+    }
 }
+

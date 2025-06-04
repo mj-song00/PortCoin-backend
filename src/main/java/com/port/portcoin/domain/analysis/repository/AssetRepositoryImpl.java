@@ -1,10 +1,10 @@
 package com.port.portcoin.domain.analysis.repository;
 
-import com.port.portcoin.domain.analysis.dto.response.AssetTablePageResponse;
 import com.port.portcoin.domain.analysis.dto.response.AssetTableResponseItem;
 import com.port.portcoin.domain.analysis.dto.response.PieChartResponse;
 import com.port.portcoin.domain.analysis.dto.response.TotalAssetResponse;
-import com.port.portcoin.domain.user.dto.AuthUser;
+import com.port.portcoin.domain.analysis.dto.response.UserAssetSummary;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +14,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 import static com.port.portcoin.domain.coin.entity.QCoin.coin;
+import static com.port.portcoin.domain.portfolio.entity.QPortfolio.portfolio;
 import static com.port.portcoin.domain.portfoliocoin.entity.QPortfolioCoin.portfolioCoin;
 
 @Repository
@@ -102,5 +104,48 @@ public class AssetRepositoryImpl implements AssetCustomRepository{
                     .orElse(0.0);
         }
         return new TotalAssetResponse(averageAsset);
+    }
+
+    @Override
+    public List<UserAssetSummary> getBottom() {
+        // 1. 유저별 총 자산 구하기
+        List<Tuple> userAssets = q
+                .select(
+                        portfolio.user.id,
+                        portfolioCoin.amount.multiply(portfolioCoin.currentPrice).sum()
+                )
+                .from(portfolioCoin)
+                .join(portfolioCoin.portfolio, portfolio)
+                .groupBy(portfolio.user.id)
+                .fetch();
+
+        // 2. Java에서 정렬 및 하위 10% 필터링
+        List<UserAssetSummary> sorted = userAssets.stream()
+                .filter(tuple -> tuple.get(1, Double.class) != null)
+                .map(tuple -> new UserAssetSummary(
+                        tuple.get(0, Long.class),   // userId
+                        tuple.get(1, Double.class)  // totalAsset
+                ))
+                .sorted(Comparator.comparingDouble(UserAssetSummary::getTotalAsset)) // 오름차순
+                .toList();
+
+        int totalCount = sorted.size();
+        int tenPercentCount = (int) Math.ceil(totalCount * 0.1);
+
+        return sorted.subList(0, Math.min(tenPercentCount, totalCount));
+    }
+
+    @Override
+    public List<UserAssetSummary> getTop() {
+        return q
+                .select(Projections.constructor(
+                        UserAssetSummary.class,
+                        portfolio.user.id,
+                        portfolioCoin.amount.multiply(portfolioCoin.currentPrice).sum()
+                ))
+                .from(portfolioCoin)
+                .join(portfolioCoin.portfolio, portfolio)
+                .groupBy(portfolio.user.id)
+                .fetch();
     }
 }
