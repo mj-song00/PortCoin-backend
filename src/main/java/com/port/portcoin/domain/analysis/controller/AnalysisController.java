@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "Analysis", description = "통계관련 API 입니다.")
+@Tag(name = "User-Analysis", description = "유저에 관한 통계 API 입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/analysis")
 @Slf4j
-public class analysisController {
+public class AnalysisController {
 
     private final AnalysisService ananlysisService;
 
