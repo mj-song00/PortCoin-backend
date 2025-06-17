@@ -37,8 +37,20 @@ public class JwtFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+        if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
+            httpResponse.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+            httpResponse.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+            httpResponse.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+            httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
+            httpResponse.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
+
 
         String url = httpRequest.getRequestURI();
 
