@@ -8,16 +8,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
-public class CoinChartResponse {
-    List<ChartPoint> prices;
+public class CoinChartResponseWrapper {
+    private List<ChartPoint> prices;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChartPoint{
+    public static class ChartPoint {
         private LocalDate date;
         private double price;
-
+        private String symbol;
+        private String name;
     }
 }

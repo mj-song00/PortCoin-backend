@@ -8,6 +8,7 @@ public class CoinMarketResponse {
     private String symbol;
     private String name;
     private String image;
+    private String id;
 
     @JsonProperty("current_price")
     private double currentPrice;

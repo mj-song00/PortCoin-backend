@@ -3,7 +3,7 @@ package com.port.portcoin.domain.chart.service;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.chart.dto.request.CoinChartRequest;
-import com.port.portcoin.domain.chart.dto.response.CoinChartResponse;
+import com.port.portcoin.domain.chart.dto.response.CoinChartResponseWrapper;
 import com.port.portcoin.domain.external.coingecko.CoinGecko;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.entity.User;
@@ -23,7 +23,7 @@ public class ChartService {
     private final UserRepository userRepository;
 
 
-    public CoinChartResponse getChart(CoinChartRequest coinChartRequest, AuthUser authUser) {
+    public CoinChartResponseWrapper getChart(CoinChartRequest coinChartRequest, AuthUser authUser) {
        User user = getUser(authUser.getId());
 
        if (!user.getId().equals(authUser.getId())) throw new BaseException(ExceptionEnum.USER_NOT_FOUND);

@@ -1,6 +1,6 @@
 package com.port.portcoin.domain.external.coingecko;
 
-import com.port.portcoin.domain.chart.dto.response.CoinChartResponse;
+import com.port.portcoin.domain.chart.dto.response.CoinChartResponseWrapper ;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.coin.repository.CoinRepository;
 import com.port.portcoin.domain.portfoliocoin.repository.PortfolioCoinRepository;
@@ -21,17 +21,19 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.port.portcoin.domain.coin.entity.QCoin.coin;
+
 @Component
 @Slf4j
 public class CoinGecko {
     private final RestClient restClient;
     private final RedisTemplate<String, List<CoinMarketResponse>> redisTemplate;
-    private final RedisTemplate<String, List<CoinChartResponse.ChartPoint>> chartRedisTemplate;
+    private final RedisTemplate<String, List<CoinChartResponseWrapper.ChartPoint>> chartRedisTemplate;
     private final CoinRepository coinRepository;
     private final PortfolioCoinRepository portfolioCoinRepository;
 
     public CoinGecko(RestClient restClient, RedisTemplate<String, List<CoinMarketResponse>> redisTemplate,
-                     RedisTemplate<String, List<CoinChartResponse.ChartPoint>> chartRedisTemplate,
+                     RedisTemplate<String, List<CoinChartResponseWrapper.ChartPoint>> chartRedisTemplate,
                      CoinRepository coinRepository, PortfolioCoinRepository portfolioCoinRepository) {
         this.restClient = restClient;
         this.redisTemplate = redisTemplate;
@@ -105,20 +107,35 @@ public class CoinGecko {
         }
     }
 
-    public CoinChartResponse getCoinChart(String symbol, int days) {
+    public CoinChartResponseWrapper getCoinChart(String symbol, int days) {
         String cacheKey = "CoinChart:" + symbol;
-        List<CoinChartResponse.ChartPoint> fullData = chartRedisTemplate.opsForValue().get(cacheKey);
+
+        // Redis에서 코인 시세 캐시 조회
+        List<CoinChartResponseWrapper.ChartPoint> fullData = chartRedisTemplate.opsForValue().get(cacheKey);
+
+        // 코인 목록을 Redis에서 조회 (id, symbol, name 포함되어야 함)
+        List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("CoinGeckoMarket:top10");
+        if (coinList == null) {
+            throw new RuntimeException("코인 목록이 Redis에 없습니다.");
+        }
+
+        // symbol에 맞는 coin 객체를 찾음 (id, name 모두 필요)
+        CoinMarketResponse coin = coinList.stream()
+                .filter(c -> c.getSymbol().equalsIgnoreCase(symbol))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("해당 심볼의 코인이 없습니다: " + symbol));
+
+        String coinId = coin.getId(); // CoinGecko API에 맞는 id
+        String name = coin.getName();
 
         if (fullData == null) {
-            // 1. JSON 파싱을 위한 중간 매핑 객체로 Map 사용
             Map<String, List<List<Object>>> rawData = restClient.get()
-                    .uri("/coins/{symbol}/market_chart?vs_currency=krw&days=365", symbol)
+                    .uri("/coins/{id}/market_chart?vs_currency=krw&days=365", coinId)
                     .retrieve()
                     .body(new ParameterizedTypeReference<>() {});
 
             List<List<Object>> prices = rawData.get("prices");
 
-            // 2. ChartPoint 리스트로 변환
             fullData = prices.stream()
                     .map(item -> {
                         long timestamp = ((Number) item.get(0)).longValue();
@@ -126,27 +143,28 @@ public class CoinGecko {
                         LocalDate date = Instant.ofEpochMilli(timestamp)
                                 .atZone(ZoneId.of("Asia/Seoul"))
                                 .toLocalDate();
-                        return new CoinChartResponse.ChartPoint(date, price);
+                        return new CoinChartResponseWrapper.ChartPoint(date, price, symbol, name);
                     })
                     .collect(Collectors.toList());
 
-            // 3. Redis에 캐싱
+            // Redis 캐시 저장 (1일간)
             chartRedisTemplate.opsForValue().set(cacheKey, fullData, 1, TimeUnit.DAYS);
         }
 
-        // 4. 최근 날짜 기준으로 days 만큼 자르기
-        List<CoinChartResponse.ChartPoint> resultData = fullData.stream()
-                .sorted(Comparator.comparing(CoinChartResponse.ChartPoint::getDate).reversed())
+        // 최근 날짜 기준 days 만큼 자르기 (오름차순 정렬)
+        List<CoinChartResponseWrapper.ChartPoint> resultData = fullData.stream()
+                .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate).reversed())
                 .limit(days)
-                .sorted(Comparator.comparing(CoinChartResponse.ChartPoint::getDate)) // 오름차순
+                .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate))
                 .collect(Collectors.toList());
 
-        return new CoinChartResponse(resultData);
+        return new CoinChartResponseWrapper(resultData);
     }
+
+
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정마다
     public void refreshAllTopCoinsCache() {
-        // 1. Redis에서 캐싱된 전체 코인 목록 조회
         List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("CoinGeckoMarket:top10");
 
         if (coinList == null) {
@@ -155,7 +173,8 @@ public class CoinGecko {
         }
 
         for (CoinMarketResponse coin : coinList) {
-            String symbol = coin.getSymbol(); // 주의: id를 사용해야 API에 들어감 (예: "bitcoin")
+            String symbol = coin.getSymbol();
+            String name = coin.getName();
 
             try {
                 Map<String, List<List<Object>>> rawData = restClient.get()
@@ -165,14 +184,14 @@ public class CoinGecko {
 
                 List<List<Object>> prices = rawData.get("prices");
 
-                List<CoinChartResponse.ChartPoint> data = prices.stream()
+                List<CoinChartResponseWrapper.ChartPoint> data = prices.stream()
                         .map(item -> {
                             long timestamp = ((Number) item.get(0)).longValue();
                             double price = ((Number) item.get(1)).doubleValue();
                             LocalDate date = Instant.ofEpochMilli(timestamp)
                                     .atZone(ZoneId.of("Asia/Seoul"))
                                     .toLocalDate();
-                            return new CoinChartResponse.ChartPoint(date, price);
+                            return new CoinChartResponseWrapper.ChartPoint(date, price, symbol, name);
                         })
                         .collect(Collectors.toList());
 
