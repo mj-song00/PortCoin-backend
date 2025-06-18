@@ -38,8 +38,13 @@ public class Portfolio extends Timestamped {
 
     private LocalDateTime deletedAt;
 
-    public Portfolio(String name, User user){
-        this.name = name;
+    public void addCoin(PortfolioCoin coin) {
+        portfolioCoins .add(coin);
+        coin.assignPortfolio(this);
+    }
+
+    public Portfolio(String title, User user) {
+        this.name = title;
         this.user = user;
     }
 
@@ -49,5 +54,10 @@ public class Portfolio extends Timestamped {
 
     public void updateDeletedAt() {
         this.deletedAt =  LocalDateTime.now();
+    }
+
+    public void addPortfolioCoin(PortfolioCoin portfolioCoin) {
+        portfolioCoins.add(portfolioCoin);
+        portfolioCoin.assignPortfolio(this);
     }
 }

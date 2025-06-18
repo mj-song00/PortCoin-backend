@@ -48,4 +48,8 @@ public class PortfolioCoin extends Timestamped {
         this.amount = amount;
         this.purchasePrice = purchasePrice;
     }
+
+    public void assignPortfolio(Portfolio portfolio) {
+        this.portfolio = portfolio;
+    }
 }
