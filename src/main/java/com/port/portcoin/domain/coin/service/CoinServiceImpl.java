@@ -3,6 +3,7 @@ package com.port.portcoin.domain.coin.service;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.coin.dto.request.CreateCoinRequest;
+import com.port.portcoin.domain.coin.dto.response.CoinListResponse;
 import com.port.portcoin.domain.coin.entity.Coin;
 import com.port.portcoin.domain.coin.repository.CoinRepository;
 import com.port.portcoin.domain.user.dto.AuthUser;
@@ -10,6 +11,9 @@ import com.port.portcoin.domain.user.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,5 +28,17 @@ public class CoinServiceImpl implements CoinService {
 
         Coin coin = new Coin(coinRequest.getSymbol(), coinRequest.getName());
         coinRepository.save(coin);
+    }
+
+    @Override
+    public List<CoinListResponse> getCoinList()
+    {
+        List<Coin> coins = coinRepository.findAll();
+        List<CoinListResponse> result = new ArrayList<>();
+
+        for(Coin coin : coins){
+            result.add(new CoinListResponse(coin.getId(), coin.getSymbol()));
+        }
+        return result;
     }
 }

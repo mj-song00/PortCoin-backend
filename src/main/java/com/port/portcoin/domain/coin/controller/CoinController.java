@@ -3,6 +3,7 @@ package com.port.portcoin.domain.coin.controller;
 import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
+import com.port.portcoin.domain.coin.dto.response.CoinListResponse;
 import com.port.portcoin.domain.external.coingecko.CoinGecko;
 import com.port.portcoin.domain.coin.dto.request.CreateCoinRequest;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
@@ -69,5 +70,12 @@ public class CoinController {
                 .collect(Collectors.toList());
         ApiResponse<List<CoinMarketResponse>> response = ApiResponse.successWithData(topCoins,ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    @Operation(summary = "코인 리스트 조회", description = "CoinGecko에서 코인 리스트를 조회합니다.")
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<CoinListResponse>>>getCoinList(){
+        List<CoinListResponse> response = coinService.getCoinList();
+        ApiResponse<List<CoinListResponse>>  result = ApiResponse.successWithData(response, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
