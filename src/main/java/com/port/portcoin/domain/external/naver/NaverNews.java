@@ -77,17 +77,17 @@ public class NaverNews {
     @Scheduled(fixedRate = 300000) // 60,000ms = 1분
     public void refreshNews() {
         // 외부 API에서 데이터를 가져와서 Redis에 갱신
-
-        List<NewsResponse> refreshedNewsData = naverRestClient.get()
+        NaverNewsList wrapper = naverRestClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("query","코인,경기,해외,주식" )
+                        .queryParam("query", "코인,경기,해외,주식")
                         .queryParam("display", 10)
                         .queryParam("start", 1)
                         .queryParam("sort", "date")
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+                .body(NaverNewsList.class);
+
+        List<NewsResponse> refreshedNewsData = wrapper.getItems();
         // Redis에 새로운 데이터 저장
         redisTemplate.opsForValue().set("News", refreshedNewsData, 5, TimeUnit.MINUTES);
     }
