@@ -11,5 +11,5 @@ public  interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
 
     Optional<Portfolio> findByPortfolioId(Long portfolioId);
 
-    List<Portfolio> findAllByUserId(UUID id);
+    List<Portfolio> findAllByUserIdAndDeletedAtIsNull(UUID id);
 }

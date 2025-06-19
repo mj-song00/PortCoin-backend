@@ -89,7 +89,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     public ArrayList<PortfolioResponse> getPortfolios(AuthUser authUser){
         User user = getUser(authUser.getId());
 
-        List<Portfolio> portfolios = portfolioRepository.findAllByUserId(user.getId());
+        List<Portfolio> portfolios = portfolioRepository.findAllByUserIdAndDeletedAtIsNull(user.getId());
 
         ArrayList<PortfolioResponse> responses = new ArrayList<>();
         for (Portfolio portfolio : portfolios) {
