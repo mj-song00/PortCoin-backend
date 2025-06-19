@@ -78,10 +78,10 @@ public class CoinGecko {
         // 코인 심볼 → 현재가격 맵으로 변환해서 저장
         Map<String, String> priceMap = refreshedData.stream()
                 .collect(Collectors.toMap(
-                        c -> c.getSymbol().toUpperCase(), // 예: BTC, ETH
-                        c -> String.valueOf(c.getCurrentPrice())
+                        c -> c.getSymbol().toUpperCase(),
+                        c -> String.valueOf(c.getCurrentPrice()),
+                        (existing, replacement) -> replacement // 중복 키가 있을 때 나중 값을 선택
                 ));
-        redisTemplate.opsForHash().putAll("CoinMarket:prices", priceMap);
     }
 
     @Scheduled(fixedRate = 60000) // 1분마다
