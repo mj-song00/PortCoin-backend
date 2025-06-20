@@ -122,27 +122,25 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
 
     // CoinGecko에서 코인 현재 가격을 가져오는 메서드
     private double getCurrentPrice(String coinId) {
-        // CoinGecko API를 호출하여 현재 가격 가져오기
-        List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("all_coins");
+        List<CoinMarketResponse> allCoins = (List<CoinMarketResponse>) redisTemplate.opsForValue().get("CoinGeckoMarket:top10");
 
         if (allCoins == null) {
-            throw new RuntimeException("코인 데이터가 없습니다.");
+            throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
         }
 
-        // coinId에 해당하는 코인 찾아서 현재 가격 반환
         return allCoins.stream()
-                .filter(coin -> coin.getSymbol().equals(coinId))
+                .filter(coin -> coin.getSymbol().equalsIgnoreCase(coinId))
                 .findFirst()
                 .map(CoinMarketResponse::getCurrentPrice)
-                .orElseThrow(() -> new RuntimeException("해당 코인을 찾을 수 없습니다: " + coinId));
-
+                .orElseThrow(() -> new BaseException(ExceptionEnum.COIN_NOT_FOUND));
     }
+
 
     private String getCoinImage(String coinSymbol) {
         List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("all_coins");
 
         if (allCoins == null) {
-            throw new RuntimeException("코인 데이터가 없습니다.");
+            throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
         }
 
         return allCoins.stream()
