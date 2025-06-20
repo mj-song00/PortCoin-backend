@@ -3,6 +3,7 @@ package com.port.portcoin.domain.portfolio.service;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
 import com.port.portcoin.domain.coin.entity.Coin;
+import com.port.portcoin.domain.coin.repository.CoinRepository;
 import com.port.portcoin.domain.portfolio.dto.request.PortfolioCoinRequestDto;
 import com.port.portcoin.domain.portfolio.dto.request.PortfolioRequest;
 import com.port.portcoin.domain.portfolio.dto.response.PortfolioDetailResponse;
@@ -10,7 +11,6 @@ import com.port.portcoin.domain.portfolio.dto.response.PortfolioResponse;
 import com.port.portcoin.domain.portfolio.entity.Portfolio;
 import com.port.portcoin.domain.portfolio.repository.PortfolioRepository;
 import com.port.portcoin.domain.portfoliocoin.entity.PortfolioCoin;
-import com.port.portcoin.domain.portfoliocoin.repository.PortfolioCoinRepository;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.entity.User;
 import com.port.portcoin.domain.user.repository.UserRepository;
@@ -18,13 +18,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import com.port.portcoin.domain.coin.repository.CoinRepository;
-
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +31,6 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
     private final CoinRepository coinRepository;
-    private final PortfolioCoinRepository portfolioCoinRepository;
 
 
     // 포트폴리오 생성
@@ -49,7 +45,7 @@ public class PortfolioServiceImpl implements PortfolioService {
         // 3. 코인 리스트 돌면서 PortfolioCoin 생성 및 추가
         for (PortfolioCoinRequestDto coinRequest : portfolioRequest.getCoins()) {
             Coin coin = coinRepository.findById(coinRequest.getCoinId())
-                    .orElseThrow(() -> new IllegalArgumentException("코인을 찾을 수 없습니다. ID: " + coinRequest.getCoinId()));
+                    .orElseThrow(() -> new BaseException(ExceptionEnum.COIN_NOT_FOUND));
 
             PortfolioCoin portfolioCoin = new PortfolioCoin(
                     portfolio,
