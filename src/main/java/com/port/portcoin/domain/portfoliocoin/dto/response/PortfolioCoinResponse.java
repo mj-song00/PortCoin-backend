@@ -11,6 +11,7 @@ public class PortfolioCoinResponse {
     private final String name;
     private final Double amount;
     private final Double purchasePrice;
+    private final Double currentPrice;
 
     public PortfolioCoinResponse(PortfolioCoin pc) {
         this.portfolioCoinId = pc.getId();  // PortfolioCoin의 PK
@@ -19,5 +20,6 @@ public class PortfolioCoinResponse {
         this.name = pc.getCoin().getName();
         this.amount = pc.getAmount();
         this.purchasePrice = pc.getPurchasePrice();
+        this.currentPrice = pc.getCurrentPrice();
     }
 }
