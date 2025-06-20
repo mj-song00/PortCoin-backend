@@ -58,6 +58,11 @@ public class RedisConfig {
         return createTemplate();
     }
 
+    @Bean
+    public RedisTemplate<String, Double> coinPriceRedisTemplate(){
+        return createTemplate();
+    }
+
     private <T> RedisTemplate<String, T> createTemplate() {
         RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
