@@ -3,8 +3,6 @@ package com.port.portcoin.domain.portfolio.dto.request;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-
 @Getter
 public class PortfolioCoinRequestDto {
     @NotNull(message = "코인 ID는 필수입니다.")
@@ -17,5 +15,5 @@ public class PortfolioCoinRequestDto {
     private Double purchasePrice;
 
     @NotNull(message = "구매일은 필수입니다.")
-    private LocalDateTime purchaseDate;
+    private String purchaseDate;
 }

@@ -25,7 +25,7 @@ public class PortfolioCoin extends Timestamped {
 
     private Double currentPrice;
 
-    private LocalDateTime purchaseDate;
+    private String purchaseDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "portfolio_id")
@@ -35,7 +35,7 @@ public class PortfolioCoin extends Timestamped {
     @JoinColumn(name = "coin_id")
     private Coin coin;
 
-    public  PortfolioCoin(Portfolio portfolio, Coin coin, Double amount, Double purchasePrice, Double currentPrice, LocalDateTime purchaseDate) {
+    public  PortfolioCoin(Portfolio portfolio, Coin coin, Double amount, Double purchasePrice, Double currentPrice, String purchaseDate) {
         this.portfolio = portfolio;
         this.coin = coin;
         this.amount = amount;
