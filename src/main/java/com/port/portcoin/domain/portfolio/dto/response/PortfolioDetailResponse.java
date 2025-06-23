@@ -4,6 +4,7 @@ import com.port.portcoin.domain.portfolio.entity.Portfolio;
 import com.port.portcoin.domain.portfoliocoin.dto.response.PortfolioCoinResponse;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,11 +12,13 @@ import java.util.stream.Collectors;
 public class PortfolioDetailResponse {
     private final Long portfolioId;
     private final String name;
+    private final LocalDate createdAt;
     private final  List<PortfolioCoinResponse> coins;
 
     public PortfolioDetailResponse(Portfolio portfolio){
         this.portfolioId = portfolio.getPortfolioId();
         this.name = portfolio.getName();
+        this.createdAt = portfolio.getCreatedAt().toLocalDate();
         this.coins = portfolio.getPortfolioCoins().stream()
                 .map(PortfolioCoinResponse::new)
                 .collect(Collectors.toList());
