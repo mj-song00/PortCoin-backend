@@ -38,10 +38,6 @@ public class Portfolio extends Timestamped {
 
     private LocalDateTime deletedAt;
 
-    public void addCoin(PortfolioCoin coin) {
-        portfolioCoins .add(coin);
-        coin.assignPortfolio(this);
-    }
 
     public Portfolio(String title, User user) {
         this.name = title;
