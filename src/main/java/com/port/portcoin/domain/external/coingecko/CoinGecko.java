@@ -137,7 +137,7 @@ public class CoinGecko {
     }
 
     public CoinChartResponseWrapper getCoinChart(String symbol, int days) {
-        String cacheKey = "CoinGeckoMarket:all_coins:" + symbol;
+        String cacheKey = "CoinGeckoMarket:all_coins" + symbol;
 
         // Redis에서 코인 시세 캐시 조회
         List<CoinChartResponseWrapper.ChartPoint> fullData = chartRedisTemplate.opsForValue().get(cacheKey);
