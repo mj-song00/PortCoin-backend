@@ -90,14 +90,14 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
             }
             String symbol = coin.getCoin().getSymbol().toLowerCase();
             double currentPrice = getCurrentPrice(symbol);          // 현재 시세 (단가)
-            double purchasePrice = coin.getPurchasePrice();         // 총 매수 금액 (amount * 매입 단가)
+            double totalPurchasePrice = coin.getPurchasePrice();         // 총 매수 금액 (amount * 매입 단가)
 
             // 평가 금액 = 현재 단가 * 수량
             double currentValue = currentPrice * amount;
 
             // 수익률 = (평가금액 - 총매수금액) / 총매수금액 * 100
             double profitLoss = Math.round(
-                    ((currentValue - purchasePrice) / purchasePrice * 100) * 100.0
+                    ((currentValue - totalPurchasePrice) / totalPurchasePrice * 100) * 100.0
             ) / 100.0;
 
             String coinImage = getCoinImage(symbol);
@@ -118,7 +118,7 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
 
     // CoinGecko에서 코인 현재 가격을 가져오는 메서드
     private double getCurrentPrice(String coinId) {
-        List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("CoinGeckoMarket:top10");
+        List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("CoinGeckoMarket:all_coins");
 
         if (allCoins == null) {
             throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
@@ -133,7 +133,7 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
 
 
     private String getCoinImage(String coinSymbol) {
-        List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("CoinGeckoMarket:top10");
+        List<CoinMarketResponse> allCoins = redisTemplate.opsForValue().get("CoinGeckoMarket:all_coins");
 
         if (allCoins == null) {
             throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
