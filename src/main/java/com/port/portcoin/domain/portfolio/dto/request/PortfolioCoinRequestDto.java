@@ -1,9 +1,11 @@
 package com.port.portcoin.domain.portfolio.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class PortfolioCoinRequestDto {
     @NotNull(message = "코인 ID는 필수입니다.")
     private Long coinId;
