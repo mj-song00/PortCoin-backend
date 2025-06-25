@@ -3,11 +3,16 @@ package com.port.portcoin.domain.user;
 import com.port.portcoin.common.config.PasswordEncoder;
 import com.port.portcoin.common.exception.BaseException;
 import com.port.portcoin.common.exception.ExceptionEnum;
+import com.port.portcoin.domain.user.dto.AuthUser;
 import com.port.portcoin.domain.user.dto.request.SignupRequest;
+import com.port.portcoin.domain.user.dto.response.UserProfileResponse;
 import com.port.portcoin.domain.user.entity.User;
+import com.port.portcoin.domain.user.enums.UserRole;
 import com.port.portcoin.domain.user.repository.UserRepository;
 import com.port.portcoin.domain.user.service.AuthService;
 import com.port.portcoin.domain.user.service.UserServiceImpl;
+import com.port.portcoin.domain.user.validation.UserValidation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -40,6 +45,9 @@ public class UserServiceImplTest {
 
     @Mock
     private AuthService authService;
+
+    @Mock
+    private UserValidation userValidation;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -188,10 +196,196 @@ public class UserServiceImplTest {
         void getUserProfileSuccess(){
             //given
             UUID userId = UUID.randomUUID();
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com","tester","encodedPassword",UserRole.USER);
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
 
             //when
+            UserProfileResponse response = userService.getUserProfile(authUser);
 
             //than
+            assertNotNull(response);
+            assertEquals(user.getId(), response.getId());
+            assertEquals(user.getEmail(), response.getEmail());
+            assertEquals(user.getNickName(), response.getNickName());
         }
+
+        @Test
+        @DisplayName("사용자 프로필 조회 실패 - 인증되지 않은 사용자")
+        void getUserProfileFailureUnauthenticatedUser(){
+            //given
+            AuthUser authUser = null;
+
+            doThrow(new BaseException(ExceptionEnum.UNAUTHORIZED_USER))
+                    .when(userValidation).validateAuthenticatedUser(authUser);
+
+            //when
+            BaseException exception = assertThrows(BaseException.class, () -> {
+                userService.getUserProfile(authUser);
+            });
+
+            //than
+            assertEquals(ExceptionEnum.UNAUTHORIZED_USER, exception.getExceptionEnum());
+        }
+    }
+
+    @Nested
+    @DisplayName("비밀번호 변경")
+    class password{
+        @Test
+        @DisplayName("비밀번호 변경 - 성공")
+        void changePasswordSuccess(){
+            //given
+            UUID userId = UUID.randomUUID();
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com","tester","encodedOldPassword",UserRole.USER);
+            String oldPassword = "oldPassword123!";
+            String newPassword = "newPassword456!";
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+            when(passwordEncoder.matches(oldPassword, user.getPassword())).thenReturn(true);
+            when(passwordEncoder.matches(newPassword, user.getPassword())).thenReturn(false);
+            when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
+
+            //when
+            userService.changePassword(authUser, oldPassword, newPassword);
+
+            //than
+            verify(userRepository, times(1)).save(user);
+            assertEquals("encodedNewPassword", user.getPassword());
+        }
+
+        @Test
+        @DisplayName("비밀번호 변경 실패 - 현재 비밀번호 불일치")
+        void changePasswordFailureIncorrectOldPassword() {
+            // Given
+            UUID userId = UUID.randomUUID();
+
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com","tester","encodedOldPassword",UserRole.USER);
+
+            String oldPassword = "wrongOldPassword";
+            String newPassword = "newPassword456!";
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+            when(passwordEncoder.matches(oldPassword, user.getPassword())).thenReturn(false);
+
+            // When & Then
+            BaseException exception = assertThrows(BaseException.class, () -> {
+                userService.changePassword(authUser, oldPassword, newPassword);
+            });
+
+            assertEquals(ExceptionEnum.PASSWORD_MISMATCH, exception.getExceptionEnum());
+        }
+    }
+
+    @Nested
+    @DisplayName("닉네임")
+    class nickname{
+        @Test
+        @DisplayName("닉네임 변경 - 성공")
+        void changeNickNameSuccess() {
+            // Given
+            UUID userId = UUID.randomUUID();
+
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com","tester","encodedOldPassword",UserRole.USER);
+
+
+            String newNickName = "NewNickName";
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+
+            // When
+            userService.changeNickName(authUser, newNickName);
+
+            // Then
+            verify(userRepository, times(1)).save(user);
+            assertEquals(newNickName, user.getNickName());
+        }
+
+        @Test
+        @DisplayName("닉네임 변경 실패 - 새로운 닉네임이 기존과 동일")
+        void changeNickNameFailureSameAsOldNickName() {
+            // Given
+            UUID userId = UUID.randomUUID();
+
+
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com","tester","encodedOldPassword",UserRole.USER);
+            String sameNickName = "tester";
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+
+            // When & Then
+            BaseException exception = assertThrows(BaseException.class, () -> {
+                userService.changeNickName(authUser, sameNickName);
+            });
+
+            assertEquals(ExceptionEnum.NICKNAME_SAME_AS_OLD, exception.getExceptionEnum());
+        }
+    }
+
+    @Nested
+    @DisplayName("회원탈퇴")
+    class secession{
+        @Test
+        @DisplayName("회원탈퇴 - 성공")
+        void deleteUserSuccess() {
+            // Given
+            UUID userId = UUID.randomUUID();
+
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com", "tester", "encodedPassword", UserRole.USER);
+
+            String refreshToken = "sampleRefreshToken";
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+
+            // When
+            userService.deleteUser(authUser, refreshToken, response);
+
+            // Then
+            verify(userRepository, times(1)).save(user);
+            assertNotNull(user.getDeletedAt());
+            verify(authService, times(1)).logout(refreshToken, response);
+        }
+
+        @Test
+        @DisplayName("회원탈퇴 실패 - 이미 탈퇴한 사용자")
+        void deleteUserFailureAlreadyDeletedUser() {
+            // Given
+            UUID userId = UUID.randomUUID();
+
+            AuthUser authUser = new AuthUser(userId, "test@test.com", UserRole.USER);
+
+            User user = new User("test@test.com", "tester", "encodedPassword", UserRole.USER);
+
+
+            user.updateDeletedAt(); // 이미 탈퇴한 사용자로 설정
+
+            String refreshToken = "sampleRefreshToken";
+            HttpServletResponse response = mock(HttpServletResponse.class);
+
+            when(userValidation.findUserById(userId)).thenReturn(user);
+            doThrow(new BaseException(ExceptionEnum.ALREADY_DELETED))
+                    .when(userValidation).validateUserNotDeleted(user);
+
+            // When & Then
+            BaseException exception = assertThrows(BaseException.class, () -> {
+                userService.deleteUser(authUser, refreshToken, response);
+            });
+
+            assertEquals(ExceptionEnum.ALREADY_DELETED, exception.getExceptionEnum());
+        }
+
     }
 }
