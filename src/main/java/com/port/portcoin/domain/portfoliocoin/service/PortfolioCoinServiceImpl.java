@@ -74,17 +74,16 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
     }
 
     @Override
-    public List<CoinProfitLossResponse> getResult(AuthUser authUser) {
+    public List<CoinProfitLossResponse> getResult(AuthUser authUser, Long portfolioId) {
         User user = getUser(authUser.getId());
 
         if(!user.getId().equals(authUser.getId())) throw new BaseException(ExceptionEnum.USER_NOT_FOUND);
 
-        List<PortfolioCoin> userCoins = portfolioCoinRepository.findByPortfolioUserIdAndPortfolioDeletedAtIsNull(authUser.getId());
+        List<PortfolioCoin> userCoins = portfolioCoinRepository.findByPortfolio_PortfolioIdAndPortfolioDeletedAtIsNull( portfolioId);
         List<CoinProfitLossResponse> results = new ArrayList<>();
 
         for (PortfolioCoin coin : userCoins) {
             Double amount = coin.getAmount();
-            System.out.println(amount);
             if (amount == null || amount <= 0) {
                 continue; // 수량 0인 경우는 제외
             }
@@ -103,6 +102,7 @@ public class PortfolioCoinServiceImpl implements PortfolioCoinService {
             String coinImage = getCoinImage(symbol);
 
             results.add(new CoinProfitLossResponse(
+                    portfolioId,
                     coin.getCoin().getName(),
                     coinImage,
                     profitLoss

@@ -11,5 +11,5 @@ public interface PortfolioCoinService {
 
     void editPortfolioCoins(@Valid CoinEditRequest coinRegisterRequest, AuthUser authUser);
 
-   List<CoinProfitLossResponse> getResult(AuthUser authUser);
+   List<CoinProfitLossResponse> getResult(AuthUser authUser, Long portfolioId);
 }

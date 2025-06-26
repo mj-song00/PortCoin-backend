@@ -39,12 +39,13 @@ public class PortfolioCoinController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "포트폴리오 코인별 가치 조회", description = "현재 시세를 기반으로 사용자들의 코인 가치를 조회합니다.")
-    @GetMapping("/value")
+    @Operation(summary = "포트폴리오 코인별 가치 조회", description = "포트폴리오별로 현재 시세를 기반으로 사용자들의 코인 가치를 조회합니다.")
+    @GetMapping("/{portfolioId}")
     public ResponseEntity<List<CoinProfitLossResponse>> getResult(
-            @Auth AuthUser authUser
+            @Auth AuthUser authUser,
+            @PathVariable Long portfolioId
     ){
-        List<CoinProfitLossResponse> response = portfolioCoinService.getResult(authUser);
+        List<CoinProfitLossResponse> response = portfolioCoinService.getResult(authUser, portfolioId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
