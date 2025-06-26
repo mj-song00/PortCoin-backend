@@ -4,10 +4,10 @@ import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
 import com.port.portcoin.domain.coin.dto.response.CoinListResponse;
-import com.port.portcoin.domain.external.coingecko.CoinGecko;
 import com.port.portcoin.domain.coin.dto.request.CreateCoinRequest;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.coin.service.CoinService;
+import com.port.portcoin.domain.external.coingecko.service.CoinGeckoService;
 import com.port.portcoin.domain.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,8 +30,10 @@ import java.util.stream.Collectors;
 public class CoinController {
 
     private final CoinService coinService;
-    private final CoinGecko coinGecko;
+    private final CoinGeckoService coinGeckoService;
     private final RedisTemplate<String, List<CoinMarketResponse>> redisTemplate;
+
+
 
     @Operation(summary = "코인 등록", description = "코인을 등록합니다.")
     @PostMapping("")
@@ -56,21 +58,26 @@ public class CoinController {
     @Operation(summary = "시장 코인 조회", description = "코인들의 시장값을 조회합니다")
     @GetMapping("/price")
     public ResponseEntity<ApiResponse<List<CoinMarketResponse>>> getTopCoins(){
-        // Redis에서 전체 코인 데이터를 조회
-        List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("all_coins");
-
-        if (coinList == null) {
-            // Redis에 데이터가 없으면 CoinGecko API 호출 후 Redis에 저장
-            coinList = coinGecko.getCoinList();
-        }
-
-        // 상위 10개 코인만 추출
-        List<CoinMarketResponse> topCoins = coinList.stream()
-                .limit(10)
-                .collect(Collectors.toList());
-        ApiResponse<List<CoinMarketResponse>> response = ApiResponse.successWithData(topCoins,ApiResponseEnum.GET_SUCCESS);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+//        // Redis에서 전체 코인 데이터를 조회
+//        List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("all_coins");
+//
+//        if (coinList == null) {
+//            // Redis에 데이터가 없으면 CoinGecko API 호출 후 Redis에 저장
+//            coinList = coinGecko.getCoinList();
+//        }
+//
+//        // 상위 10개 코인만 추출
+//        List<CoinMarketResponse> topCoins = coinList.stream()
+//                .limit(10)
+//                .collect(Collectors.toList());
+//        ApiResponse<List<CoinMarketResponse>> response = ApiResponse.successWithData(topCoins,ApiResponseEnum.GET_SUCCESS);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+        List<CoinMarketResponse> list = coinGeckoService.getCoinList();
+        ApiResponse<List<CoinMarketResponse>> response =
+                ApiResponse.successWithData(list, ApiResponseEnum.GET_SUCCESS);
+        return ResponseEntity.ok(response);
     }
+
     @Operation(summary = "코인 리스트 조회", description = "CoinGecko에서 코인 리스트를 조회합니다.")
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<CoinListResponse>>>getCoinList(){

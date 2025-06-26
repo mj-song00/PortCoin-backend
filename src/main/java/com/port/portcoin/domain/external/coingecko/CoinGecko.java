@@ -47,49 +47,6 @@ public class CoinGecko {
         this.portfolioCoinRepository = portfolioCoinRepository;
     }
 
-    @Transactional
-    public List<CoinMarketResponse> getCoinList() {
-        // Redis에서 먼저 데이터 조회
-        List<CoinMarketResponse> cachedData = redisTemplate.opsForValue().get("CoinGeckoMarket:all_coins");
-
-        if (cachedData == null) {
-            // 캐시가 없으면 외부 API 호출
-            cachedData = restClient.get()
-                    .uri("/coins/markets?vs_currency=krw&order=market_cap_desc")
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<>() {
-                    });
-
-            redisTemplate.opsForValue().set("CoinGeckoMarket:all_coins", cachedData, 1, TimeUnit.MINUTES);
-
-            // 각 코인을 Redis와 DB에 저장
-            for (CoinMarketResponse coinResponse : cachedData) {
-                // 가격만 개별 키로 저장
-                priceRedisTemplate.opsForValue().set("coin:price:" + coinResponse.getId(), coinResponse.getCurrentPrice(), 1, TimeUnit.MINUTES);
-
-                // 4. 모든 PortfolioCoin 조회
-                List<PortfolioCoin> allPortfolioCoins = portfolioCoinRepository.findAll();
-
-                // 5. 해당 코인의 가격만 업데이트
-                for (PortfolioCoin pc : allPortfolioCoins) {
-                    String symbol = pc.getCoin().getSymbol();
-
-                    cachedData.stream()
-                            .filter(c -> c.getSymbol().equalsIgnoreCase(symbol))
-                            .findFirst()
-                            .ifPresent(matching -> {
-                                pc.updateCurrentPrice(matching.getCurrentPrice());
-                            });
-                }
-
-                // 6. 변경된 값 모두 저장
-                portfolioCoinRepository.saveAll(allPortfolioCoins);
-            }
-        }
-        return cachedData;
-    }
-
-
     // 1분마다 캐시 갱신
     @Scheduled(fixedRate = 60000) // 60,000ms = 1분
     public void refreshCoinCache() {
