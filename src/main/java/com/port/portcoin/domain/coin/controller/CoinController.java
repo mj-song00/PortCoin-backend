@@ -3,8 +3,8 @@ package com.port.portcoin.domain.coin.controller;
 import com.port.portcoin.common.annotation.Auth;
 import com.port.portcoin.common.response.ApiResponse;
 import com.port.portcoin.common.response.ApiResponseEnum;
-import com.port.portcoin.domain.coin.dto.response.CoinListResponse;
 import com.port.portcoin.domain.coin.dto.request.CreateCoinRequest;
+import com.port.portcoin.domain.coin.dto.response.CoinListResponse;
 import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.coin.service.CoinService;
 import com.port.portcoin.domain.external.coingecko.service.CoinGeckoService;
@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Tag(name = "Coin", description = "코인 관련 API, ADMIN만 등록이 가능합니다.")
 @RestController
@@ -58,20 +57,6 @@ public class CoinController {
     @Operation(summary = "시장 코인 조회", description = "코인들의 시장값을 조회합니다")
     @GetMapping("/price")
     public ResponseEntity<ApiResponse<List<CoinMarketResponse>>> getTopCoins(){
-//        // Redis에서 전체 코인 데이터를 조회
-//        List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("all_coins");
-//
-//        if (coinList == null) {
-//            // Redis에 데이터가 없으면 CoinGecko API 호출 후 Redis에 저장
-//            coinList = coinGecko.getCoinList();
-//        }
-//
-//        // 상위 10개 코인만 추출
-//        List<CoinMarketResponse> topCoins = coinList.stream()
-//                .limit(10)
-//                .collect(Collectors.toList());
-//        ApiResponse<List<CoinMarketResponse>> response = ApiResponse.successWithData(topCoins,ApiResponseEnum.GET_SUCCESS);
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
         List<CoinMarketResponse> list = coinGeckoService.getCoinList();
         ApiResponse<List<CoinMarketResponse>> response =
                 ApiResponse.successWithData(list, ApiResponseEnum.GET_SUCCESS);
