@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.port.portcoin.domain.user.dto.AuthUser;
 
+import java.util.Map;
+
 
 @Tag(name = "Chart", description = "개별 coin들의 chart 관련 API입니다.")
 @RestController
@@ -30,12 +32,12 @@ public class ChartController {
      */
     @Operation(summary = "개별코인 시세조회", description = "코인별 시세를 조회합니다.")
     @PostMapping("/history")
-    public ResponseEntity<ApiResponse<CoinChartResponseWrapper>> getChart(
-            @RequestBody CoinChartRequest coinChartRequest,
+    public ResponseEntity<ApiResponse<Map<String, CoinChartResponseWrapper>>> getChart(
+           @RequestBody CoinChartRequest coinChartRequest,
             @Auth AuthUser authUser
     ){
-       CoinChartResponseWrapper result = chartService.getChart(coinChartRequest, authUser);
-        ApiResponse<CoinChartResponseWrapper> response = ApiResponse.successWithData(result,ApiResponseEnum.GET_SUCCESS);
+        Map<String, CoinChartResponseWrapper> result = chartService.getChart(coinChartRequest, authUser);
+        ApiResponse<Map<String, CoinChartResponseWrapper>> response = ApiResponse.successWithData(result,ApiResponseEnum.GET_SUCCESS);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
