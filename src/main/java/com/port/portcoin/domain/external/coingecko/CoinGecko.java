@@ -18,9 +18,7 @@ import org.springframework.web.client.RestClient;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -93,62 +91,76 @@ public class CoinGecko {
         }
     }
 
-    public CoinChartResponseWrapper getCoinChart(String symbol, int days) {
-        String cacheKey = "CoinGeckoMarket:all_coins" + symbol;
-
-        // Redis에서 코인 시세 캐시 조회
-        List<CoinChartResponseWrapper.ChartPoint> fullData = chartRedisTemplate.opsForValue().get(cacheKey);
-
-        // 코인 목록을 Redis에서 조회 (id, symbol, name 포함되어야 함)
+    public Map<String, CoinChartResponseWrapper> getCoinChart(List<String> symbols, int days) {
+        // 1. Redis에서 전체 코인 기본 정보 조회
         List<CoinMarketResponse> coinList = redisTemplate.opsForValue().get("CoinGeckoMarket:all_coins");
         if (coinList == null) {
             throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
         }
 
-        // symbol에 맞는 coin 객체를 찾음 (id, name 모두 필요)
-        CoinMarketResponse coin = coinList.stream()
-                .filter(c -> c.getSymbol().equalsIgnoreCase(symbol))
-                .findFirst()
-                .orElseThrow(() -> new  BaseException(ExceptionEnum.COIN_NOT_FOUND));
-
-        String coinId = coin.getId(); // CoinGecko API에 맞는 id
-        String name = coin.getName();
-        double priceChangePercentage24h = coin.getPriceChangePercentage24h();
-
-        if (fullData == null) {
-            Map<String, List<List<Object>>> rawData = restClient.get()
-                    .uri("/coins/{id}/market_chart?vs_currency=krw&days=365", coinId)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<>() {
-                    });
-
-            List<List<Object>> prices = rawData.get("prices");
-
-            fullData = prices.stream()
-                    .map(item -> {
-                        long timestamp = ((Number) item.get(0)).longValue();
-                        double price = ((Number) item.get(1)).doubleValue();
-                        LocalDate date = Instant.ofEpochMilli(timestamp)
-                                .atZone(ZoneId.of("Asia/Seoul"))
-                                .toLocalDate();
-                        return new CoinChartResponseWrapper.ChartPoint(date, price, symbol, name, priceChangePercentage24h);
-                    })
-                    .collect(Collectors.toList());
-
-            // Redis 캐시 저장 (1일간)
-            chartRedisTemplate.opsForValue().set(cacheKey, fullData, 1, TimeUnit.DAYS);
+        // 2. symbol(소문자) -> CoinMarketResponse 매핑 (중복 심볼 첫 번째만 저장)
+        Map<String, CoinMarketResponse> symbolToCoin = new HashMap<>();
+        for (CoinMarketResponse coin : coinList) {
+            symbolToCoin.putIfAbsent(coin.getSymbol().toLowerCase(), coin);
         }
 
-        // 최근 날짜 기준 days 만큼 자르기 (오름차순 정렬)
-        List<CoinChartResponseWrapper.ChartPoint> resultData = fullData.stream()
-                .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate).reversed())
-                .limit(days)
-                .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate))
-                .collect(Collectors.toList());
+        Map<String, CoinChartResponseWrapper> resultMap = new HashMap<>();
 
-        return new CoinChartResponseWrapper(resultData);
+        // 3. 각 심볼별로 차트 데이터 조회 및 캐싱 처리
+        for (String symbol : symbols) {
+            CoinMarketResponse coin = symbolToCoin.get(symbol.toLowerCase());
+            if (coin == null) {
+                throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
+            }
+
+            String coinId = coin.getId();
+            String name = coin.getName();
+            double priceChangePercentage24h = coin.getPriceChangePercentage24h();
+
+            // 캐시 키는 고유한 coinId를 사용
+            String cacheKey = "CoinGeckoMarket:all_coins:" + coinId;
+
+            // Redis에서 차트 데이터 조회
+            List<CoinChartResponseWrapper.ChartPoint> fullData = chartRedisTemplate.opsForValue().get(cacheKey);
+
+            if (fullData == null) {
+                // 외부 API 호출해서 차트 데이터 조회
+                Map<String, List<List<Object>>> rawData = restClient.get()
+                        .uri("/coins/{id}/market_chart?vs_currency=krw&days=365", coinId)
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<>() {});
+
+                List<List<Object>> prices = rawData.get("prices");
+
+                fullData = prices.stream()
+                        .map(item -> {
+                            long timestamp = ((Number) item.get(0)).longValue();
+                            double price = ((Number) item.get(1)).doubleValue();
+                            LocalDate date = Instant.ofEpochMilli(timestamp)
+                                    .atZone(ZoneId.of("Asia/Seoul"))
+                                    .toLocalDate();
+                            return new CoinChartResponseWrapper.ChartPoint(date, price, symbol, name, priceChangePercentage24h);
+                        })
+                        .collect(Collectors.toList());
+
+                // Redis에 캐시 저장 (1일간)
+                chartRedisTemplate.opsForValue().set(cacheKey, fullData, 1, TimeUnit.DAYS);
+            }
+
+            // 4. 최근 days 만큼만 자르고 정렬 (오름차순)
+            List<CoinChartResponseWrapper.ChartPoint> resultData = fullData.stream()
+                    .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate).reversed())
+                    .limit(days)
+                    .sorted(Comparator.comparing(CoinChartResponseWrapper.ChartPoint::getDate))
+                    .collect(Collectors.toList());
+
+            // 5. 결과 맵에 심볼 키로 저장 (소문자)
+            resultMap.put(symbol.toLowerCase(), new CoinChartResponseWrapper(resultData));
+        }
+
+        // 6. 심볼별 차트 데이터 맵 반환
+        return resultMap;
     }
-
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정마다
     public void refreshAllTopCoinsCache() {
