@@ -8,7 +8,7 @@ public class CoinMarketResponse {
     private String symbol;
     private String name;
     private String image;
-    private String id;
+    private Long id;
 
     @JsonProperty("current_price")
     private double currentPrice;
@@ -19,4 +19,14 @@ public class CoinMarketResponse {
     @JsonProperty("total_volume")
     private double totalVolume;
 
+
+    public CoinMarketResponse(String symbol, String name, String image, Long id, double currentPrice, double priceChangePercentage24h, double totalVolume) {
+        this.symbol = symbol;
+        this.name = name;
+        this.image = image;
+        this.id = id;
+        this.currentPrice = currentPrice;
+        this.priceChangePercentage24h = priceChangePercentage24h;
+        this.totalVolume = totalVolume;
+    }
 }
