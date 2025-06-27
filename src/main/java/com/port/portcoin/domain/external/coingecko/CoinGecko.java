@@ -113,7 +113,7 @@ public class CoinGecko {
                 throw new BaseException(ExceptionEnum.COIN_NOT_FOUND);
             }
 
-            String coinId = coin.getId();
+            Long coinId = coin.getId();
             String name = coin.getName();
             double priceChangePercentage24h = coin.getPriceChangePercentage24h();
 
