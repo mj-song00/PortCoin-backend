@@ -96,6 +96,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     }
 
     //포트폴리오 상세조회
+    @Transactional
     public PortfolioDetailResponse getDetail(Long portfolioId, AuthUser authUser){
         Portfolio portfolio = validatePortfolio(authUser,  portfolioId);
 
