@@ -4,6 +4,7 @@ import com.port.portcoin.domain.coin.dto.response.CoinMarketResponse;
 import com.port.portcoin.domain.portfoliocoin.entity.PortfolioCoin;
 import com.port.portcoin.domain.portfoliocoin.repository.PortfolioCoinRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,8 +16,9 @@ public class CoinPriceUpdate {
         this.portfolioCoinRepository = portfolioCoinRepository;
     }
 
+    @Transactional
     public void updatePortfolioCoinPrices(List<CoinMarketResponse> marketData) {
-        List<PortfolioCoin> portfolioCoins = portfolioCoinRepository.findAll();
+        List<PortfolioCoin> portfolioCoins = portfolioCoinRepository.findAllWithCoin();
 
         for (PortfolioCoin pc : portfolioCoins) {
             String symbol = pc.getCoin().getSymbol();

@@ -15,5 +15,6 @@ public interface PortfolioCoinRepository extends JpaRepository<PortfolioCoin, Lo
 
     List<PortfolioCoin> findByPortfolio_PortfolioIdAndPortfolioDeletedAtIsNull(Long portfolioId);
 
-    boolean  existsByPortfolio_PortfolioIdAndCoin_Symbol(Long portfolioId, String symbol);
+    @Query("SELECT pc FROM PortfolioCoin pc JOIN FETCH pc.coin")
+    List<PortfolioCoin> findAllWithCoin();
 }
