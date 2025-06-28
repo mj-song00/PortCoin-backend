@@ -14,6 +14,8 @@ spring:
       hibernate:
         format_sql: true
         show-sql: true
+        jdbc:
+          batch_size: 50
 
   data:
     redis:
@@ -29,6 +31,14 @@ spring:
     swagger-ui:
       enabled: true
       path: /swagger-ui.html
+
+logging:
+    level:
+      root: info
+      org.hibernate.SQL: debug
+      org.springframework.web: DEBUG
+      org.hibernate.type.descriptor.sql.BasicBinder: trace
+
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
@@ -43,3 +53,23 @@ naver:
   api:
     clientId: ${CLIENTID}
     client-secret: ${CLIENTSECRET}
+
+# actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include:  health, metrics
+  endpoint:
+    heapdump:
+      access: unrestricted
+
+  # influxdb
+  influx:
+    metrics:
+      export:
+        influx:
+          enabled: true
+          uri: http://influxdb:8086
+          db: spring-actuator
+          auto-create-db: true
