@@ -2,13 +2,15 @@ package com.port.portcoin.domain.coin.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 public class CoinMarketResponse {
     private String symbol;
     private String name;
     private String image;
-    private Long id;
+    private String id;
 
     @JsonProperty("current_price")
     private double currentPrice;
@@ -19,8 +21,7 @@ public class CoinMarketResponse {
     @JsonProperty("total_volume")
     private double totalVolume;
 
-
-    public CoinMarketResponse(String symbol, String name, String image, Long id, double currentPrice, double priceChangePercentage24h, double totalVolume) {
+    public CoinMarketResponse(String symbol, String name, String image, String id, double currentPrice, double priceChangePercentage24h, double totalVolume) {
         this.symbol = symbol;
         this.name = name;
         this.image = image;
