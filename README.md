@@ -32,3 +32,46 @@ PortCoin은 투자자들이 보다 쉽고 빠르게 자신의 자산을 관리�
 ### 스웨거 사용
 http://localhost:8080/swagger-ui/index.html
 
+### 주요 기능
+- JWT 기반 인증 시스템 구현
+(액세스/리프레시 토큰 분리, Redis에 리프레시 토큰 저장으로 보안성 강화)
+- 사용자별 포트폴리오 생성 및 관리
+(코인 등록시 실시간 시세 연동)
+- K6 및 Grafana를 활용한 부하 테스트 시각화 
+
+### 📁 프로젝트 구조
+``` portcoin/
+├── src/
+│ ├── main/
+│ │ ├── java/com/portcoin/...
+│ │ └── resources/
+│ │ ├── application.yml
+│ │ └── ...
+│ └── test/
+│ └── java/...
+├── docker-compose.yml
+├── build.gradle
+└── README.md 
+```
+**주요 구성 요소**
+- **Spring Boot** : REST API 및 전체 비즈니스 로직 구현
+- **PostgreSQL** : 유저, 포트폴리오, 코인 등 주요 데이터 저장소
+- **Redis** : CoinGecko API 데이터 캐싱 
+- **docker-compose.yml** : K6, Grafana, InfluxDB 컨테이너 실행을 위한 관리 도구 (K6 테스트 시각화 환경 구성)
+
+### 설치 및 실행 방법 
+1. 프로젝트 클론
+```
+git clone https://github.com/minji-song00/portcoin.git
+```
+
+2. docker-compose.yml 실행
+```
+docker-compose up -d 
+```
+
+3. 모니터링 환경 실행(선택사항)
+```
+docker-compose.monitoring.yml up -d
+```
+4. 프론트 코드 실행
