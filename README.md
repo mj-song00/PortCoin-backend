@@ -60,18 +60,42 @@ http://localhost:8080/swagger-ui/index.html
 - **docker-compose.yml** : K6, Grafana, InfluxDB 컨테이너 실행을 위한 관리 도구 (K6 테스트 시각화 환경 구성)
 
 ### 설치 및 실행 방법 
-1. 프로젝트 클론
+1. 백엔트 프로젝트 프로젝트 클론 및 실행
 ```
 git clone https://github.com/minji-song00/portcoin.git
+cd portcoinㅋ
+docker-compose up -d
 ```
 
-2. docker-compose.yml 실행
-```
-docker-compose up -d 
-```
-
-3. 모니터링 환경 실행(선택사항)
+2. 모니터링 환경 실행(선택사항)
 ```
 docker-compose.monitoring.yml up -d
 ```
-4. 프론트 코드 실행
+
+3. 프론트 코드 클론 및 실행
+
+```
+git clone https://github.com/mj-song00/PortCoin-Front
+cd portcoin-front
+npm run start 
+```
+
+### 트러블 슈팅
+1. [K6 부하 테스트 중 timeout 발생](https://velog.io/@viento/k6로-부하테스트중-timeout-문제-발생)
+- 문제:  부하 테스트 마지막 구간에서 i/o timeout 발생. 콘솔 확인 결과, portfolio_coin의 currentPrice 업데이트 과정에서 수십 개의 쿼리가 발생.
+- 원인: JPA 연관 관계 미처리로 인해 N+1 쿼리 발생 → 응답 지연 → timeout
+- 해결:
+  - hibernate.jdbc.batch_size 설정 (배치 업데이트로 쿼리 수 감소)
+  - JPA fetch join으로 N+1 문제 해결
+  - K6 시나리오 check 조건 수정
+- 결과 : 전체 실패 수는 114건에서 106건으로 줄었으며, **약 7%** 감소
+
+2. [N+1 문제로 인한 성능 저하 개선](https://velog.io/@viento/N1문제-해결하기)
+- 문제: 포트폴리오 상세 조회 시 Hibernate가 코인 개수만큼 반복해서 쿼리를 실행하여 응답 지연 발생
+- 원인: Portfolio → PortfolioCoin → Coin 간 지연 로딩으로 인한 N+1 문제
+- 해결: JPQL에서 fetch join을 활용해 관련 엔티티를 한 번에 조회하도록 수정하여 쿼리 수 대폭 감소 및 응답 시간 개선
+
+
+### 향후 계획 
+1. SSE를 설정하여 실시간 시세가 변동이 있을 경우 프론트에 자동으로 알림 설정
+2. 유저별 수익률 랭킹화 -> 포트폴리오 유료 공개 수익 모델 설정 
