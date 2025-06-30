@@ -1,37 +1,23 @@
 version: '3.8'
 
 services:
-  influxdb:
-    image: influxdb:1.8
-    ports:
-      - "8086:8086"
-    volumes:
-      - influxdb_data:/var/lib/influxdb
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+  postgres:
+    image: postgres:15
+    container_name: portcoin_postgres
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    depends_on:
-      - influxdb
-
-  k6:
-    image: grafana/k6
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB: coin
+    ports:
+      - "5432:5432"
     volumes:
-      - ./k6:/scripts
-    environment:
-      - K6_OUT=influxdb=http://influxdb:8086/k6
-    depends_on:
-      - influxdb
-    command: run /scripts/script.js
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: portcoin_redis
+    ports:
+      - "6379:6379"
 
 volumes:
-  influxdb_data:
-  grafana_data:
+  pgdata:
