@@ -55,6 +55,10 @@ http://localhost:8080/swagger-ui/index.html
 ├── build.gradle
 └── README.md 
 ```
+### 서비스 아키텍처
+![스크린샷 2025-07-01 오전 11 28 30](https://github.com/user-attachments/assets/bda01389-315c-4b14-8a23-5a47ddbd00a6)
+
+
 **주요 구성 요소**
 - **Spring Boot** : REST API 및 전체 비즈니스 로직 구현
 - **docker-compose.yml** : Redis, PostgreSQL 주요 데이터 저장소 컨테이너 샐행 관리 도구
@@ -101,3 +105,4 @@ npm run start
 ### 향후 계획 
 1. SSE를 적용해 실시간 시세 변동 시 프론트에 자동 알림 설정
 2. 유저별 수익률 랭킹화 및 포트폴리오 유료 공개 수익 모델 도입
+
