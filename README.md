@@ -68,7 +68,7 @@ http://localhost:8080/swagger-ui/index.html
 1. 백엔트 프로젝트 프로젝트 클론 및 실행
 ```
 git clone https://github.com/minji-song00/portcoin.git
-cd portcoinㅋ
+cd portcoin
 docker-compose up -d
 ```
 
